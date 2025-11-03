@@ -1,0 +1,52 @@
+services:
+  api:
+    build:
+      context: ./suppliersync
+      dockerfile: Dockerfile
+    container_name: suppliersync-api
+    ports:
+      - "8000:8000"
+    environment:
+      - SQLITE_PATH=/data/suppliersync.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OPENAI_TIMEOUT=${OPENAI_TIMEOUT:-60}
+      - OPENAI_MAX_RETRIES=${OPENAI_MAX_RETRIES:-3}
+      - API_PORT=8000
+      - MAX_DAILY_PRICE_DRIFT=${MAX_DAILY_PRICE_DRIFT:-0.20}
+      - MIN_MARGIN_PCT=${MIN_MARGIN_PCT:-0.05}
+    volumes:
+      - ./suppliersync/suppliersync.db:/data/suppliersync.db
+      - ./suppliersync/data:/app/data
+      - ./suppliersync/.chroma:/app/.chroma
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: suppliersync-dashboard
+    ports:
+      - "3001:3000"
+    environment:
+      - SQLITE_PATH=/data/suppliersync.db
+      - ORCHESTRATOR_API_URL=http://api:8000
+      - NODE_ENV=production
+      - PORT=3000
+      - DASHBOARD_READONLY=true
+    volumes:
+      - ./suppliersync:/data
+    depends_on:
+      - api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+

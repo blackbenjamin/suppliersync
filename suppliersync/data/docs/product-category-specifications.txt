@@ -1,0 +1,136 @@
+PRODUCT CATEGORY SPECIFICATIONS & CLASSIFICATION GUIDE
+=======================================================
+Last Updated: January 2025
+
+OVERVIEW
+--------
+This document defines product categories, their specifications, and classification 
+rules for the SupplierSync catalog system. Proper categorization ensures accurate 
+pricing, governance, and customer experience.
+
+CATEGORY DEFINITIONS
+--------------------
+
+1. FURNITURE & HOME DECOR
+   Description: Indoor furniture, decorative items, lighting, and home accessories
+   Typical SKU Prefix: FURN-
+   Margin Range: 15-30%
+   Price Volatility: Low to Medium
+   MAP Enforcement: Yes
+   Seasonal Factors: Q4 high season, Q1 clearance
+   
+   Subcategories:
+   - Living Room Furniture (sofas, chairs, coffee tables)
+   - Bedroom Furniture (beds, dressers, nightstands)
+   - Dining Room Furniture (tables, chairs, buffets)
+   - Home Decor (wall art, vases, candles)
+   - Lighting (table lamps, floor lamps, chandeliers)
+
+2. OUTDOOR & PATIO
+   Description: Outdoor furniture, patio sets, garden decor, and seasonal items
+   Typical SKU Prefix: OUT-
+   Margin Range: 20-35%
+   Price Volatility: High (seasonal)
+   MAP Enforcement: Moderate
+   Seasonal Factors: High season (Apr-Sep), Winter discounts (Nov-Feb)
+   
+   Subcategories:
+   - Patio Furniture (sets, individual pieces)
+   - Outdoor Dining (tables, chairs, umbrellas)
+   - Garden Decor (statues, planters, fountains)
+   - Seasonal Items (holiday decorations, summer accessories)
+
+3. ELECTRONICS & APPLIANCES
+   Description: Consumer electronics, home appliances, smart home devices
+   Typical SKU Prefix: ELEC-
+   Margin Range: 10-20%
+   Price Volatility: Medium (technology refresh cycles)
+   MAP Enforcement: Strict
+   Price Protection: 30 days standard
+   
+   Subcategories:
+   - Kitchen Appliances (refrigerators, ovens, dishwashers)
+   - Home Electronics (TVs, audio systems, smart devices)
+   - Small Appliances (coffee makers, blenders, toasters)
+   - Computer Accessories (monitors, keyboards, peripherals)
+
+4. HOME IMPROVEMENT
+   Description: Tools, hardware, building materials, and DIY supplies
+   Typical SKU Prefix: HOME-
+   Margin Range: 15-25%
+   Price Volatility: Low
+   MAP Enforcement: Moderate
+   
+   Subcategories:
+   - Power Tools (drills, saws, sanders)
+   - Hand Tools (screwdrivers, hammers, wrenches)
+   - Building Materials (lumber, hardware, fasteners)
+   - Safety Equipment (safety glasses, gloves, helmets)
+
+5. TEXTILES & SOFT GOODS
+   Description: Bedding, towels, curtains, rugs, and fabric products
+   Typical SKU Prefix: TEXT-
+   Margin Range: 20-30%
+   Price Volatility: Low
+   MAP Enforcement: Yes
+   
+   Subcategories:
+   - Bedding (sheets, comforters, pillows)
+   - Bath Textiles (towels, bath mats, shower curtains)
+   - Window Treatments (curtains, blinds, valances)
+   - Rugs & Carpets (area rugs, runners, mats)
+
+RESTRICTED CATEGORIES
+---------------------
+These categories require special handling and may be blocked from automatic updates:
+
+- Restricted Items: Products requiring special licensing or permits
+- High-Risk Products: Items with safety or regulatory concerns
+- Age-Restricted: Products requiring age verification
+- Special Order: Custom or made-to-order items
+
+CLASSIFICATION RULES
+--------------------
+1. SKU Naming Convention:
+   - Use category prefix (FURN-, OUT-, ELEC-, etc.)
+   - Followed by 4-6 digit numeric identifier
+   - Example: FURN-12345, OUT-67890
+
+2. Multi-Category Products:
+   - Assign to primary category
+   - Use secondary category tags for cross-referencing
+   - Example: Outdoor dining table = OUTDOOR & PATIO (primary), FURNITURE (secondary)
+
+3. Seasonal Reclassification:
+   - Products may shift categories seasonally
+   - Example: Outdoor heaters may be OUTDOOR & PATIO in winter, but categorized differently in summer
+
+PRICING IMPLICATIONS BY CATEGORY
+---------------------------------
+- High-Margin Categories (25%+): Furniture, Outdoor, Textiles
+  → More flexibility in pricing, seasonal adjustments allowed
+  
+- Medium-Margin Categories (15-25%): Home Improvement
+  → Standard pricing rules apply
+  
+- Low-Margin Categories (10-20%): Electronics
+  → Strict MAP enforcement, price protection required
+
+GOVERNANCE RULES BY CATEGORY
+-----------------------------
+- Furniture & Outdoor: Allow daily price changes up to 20%
+- Electronics: Daily changes limited to 15% (price protection)
+- Textiles: Standard 20% daily limit
+- Restricted Categories: No automatic updates allowed
+
+QUALITY ASSURANCE
+-----------------
+All products must meet category-specific quality standards:
+- Furniture: Structural integrity, finish quality, material authenticity
+- Electronics: Safety certifications, warranty standards, compatibility
+- Outdoor: Weather resistance, durability ratings, material quality
+- Textiles: Fabric quality, thread count standards, colorfastness
+
+For category classification questions, contact:
+catalog@suppliersync.example.com
+

@@ -1,0 +1,107 @@
+SUPPLIER PRICING POLICY & CATALOG GUIDELINES
+============================================
+Effective Date: January 2025
+Version: 2.1
+
+1. PRICING STRUCTURE
+-------------------
+All suppliers must maintain a minimum 5% margin between wholesale and retail pricing. 
+This ensures sustainable operations while remaining competitive in the marketplace.
+
+Wholesale prices should reflect:
+- Base cost of goods
+- Standard supplier markup (15-25% typical)
+- Shipping and handling costs
+- Quality assurance overhead
+
+Retail prices must include:
+- Wholesale cost
+- Minimum 5% margin (governance enforced)
+- Competitive market positioning
+- Seasonal adjustment factors
+
+2. PRICE CHANGES & VOLATILITY
+-----------------------------
+Daily price changes are limited to a maximum of 20% to prevent:
+- Market manipulation
+- Customer confusion
+- Inventory valuation issues
+- Financial reporting complications
+
+Price change requests exceeding 20% require:
+- Executive approval
+- 48-hour advance notice
+- Business justification documentation
+- Impact analysis for affected SKUs
+
+3. CATEGORY-SPECIFIC RULES
+--------------------------
+Furniture & Home Decor:
+- Standard margin: 15-30%
+- MAP (Minimum Advertised Price) enforcement: Yes
+- Seasonal pricing allowed: Yes (Q4 promotions)
+
+Electronics & Appliances:
+- Standard margin: 10-20%
+- MAP enforcement: Strict
+- Price protection: 30 days
+- Warranty considerations included
+
+Outdoor & Patio:
+- Standard margin: 20-35%
+- Seasonal adjustments: High season premium allowed
+- Weather-dependent pricing: Winter discounts permitted
+
+Restricted Categories:
+- Items requiring special licensing
+- Products with regulatory restrictions
+- High-risk categories (as specified in governance)
+
+4. COMPETITIVE PRICING
+----------------------
+Retail prices must be competitive with:
+- Major online retailers
+- Brick-and-mortar competitors
+- Direct-to-consumer channels
+- Marketplace listings
+
+Price monitoring:
+- Automated daily price checks
+- Weekly competitive analysis reports
+- Alert system for significant deviations
+
+5. DISCOUNTS & PROMOTIONS
+-------------------------
+Promotional pricing guidelines:
+- Minimum 7-day notice required
+- Maximum discount: 40% off retail
+- Black Friday/Cyber Monday: Special rules apply
+- Clearance pricing: Requires inventory justification
+
+6. SUPPLIER REQUIREMENTS
+------------------------
+All suppliers must:
+- Maintain accurate pricing data
+- Provide advance notice of price changes
+- Submit quarterly pricing reviews
+- Respond to pricing inquiries within 24 hours
+
+7. GOVERNANCE ENFORCEMENT
+-------------------------
+Automated governance checks will:
+- Reject prices below wholesale cost
+- Reject margins below 5%
+- Flag daily price changes >20%
+- Block restricted category updates
+- Enforce MAP pricing where applicable
+
+8. DISPUTE RESOLUTION
+---------------------
+Price-related disputes should be escalated to:
+- Primary: Pricing Operations Team
+- Secondary: Supplier Relations
+- Final: Executive Review Board
+
+For questions or clarifications, contact:
+pricing@suppliersync.example.com
+
