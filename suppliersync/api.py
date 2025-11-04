@@ -15,6 +15,14 @@ from typing import Optional
 from agents.orchestrator import Orchestrator
 from core.security import validate_path
 
+# Configure structured logging FIRST (before any logger usage)
+logging.basicConfig(
+    level=logging.INFO,
+    format='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "module": "%(name)s", "message": "%(message)s"}',
+    datefmt='%Y-%m-%dT%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
 # RAG is optional - only import if available
 try:
     from core.rag import build_vectorstore
@@ -22,14 +30,6 @@ try:
 except ImportError:
     RAG_AVAILABLE = False
     logger.warning("RAG dependencies not installed. RAG endpoints will be disabled.")
-
-# Configure structured logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "module": "%(name)s", "message": "%(message)s"}',
-    datefmt='%Y-%m-%dT%H:%M:%S'
-)
-logger = logging.getLogger(__name__)
 
 # Try to import slowapi for rate limiting
 try:
