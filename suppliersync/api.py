@@ -432,6 +432,21 @@ async def get_stats(request: Request):
         raise HTTPException(status_code=500, detail="Failed to fetch stats. Check server logs for details.")
 
 
+@app.post("/api/populate")
+@limiter.limit("5/minute")  # Rate limit: 5 populate requests per minute
+async def populate_database(request: Request):
+    """Populate database with products and suppliers."""
+    logger.info("Database populate requested")
+    try:
+        from populate_inventory import populate_database
+        populate_database()
+        logger.info("Database populated successfully")
+        return {"status": "success", "message": "Database populated with products and suppliers"}
+    except Exception as e:
+        logger.error(f"Populate error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to populate database. Check server logs for details.")
+
+
 @app.get("/api/catalog", response_model=CatalogResponse)
 @limiter.limit("60/minute")  # Rate limit: 60 requests per minute
 async def get_catalog(request: Request):
