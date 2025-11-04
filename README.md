@@ -3,10 +3,8 @@
 > **A production-ready demonstration of an agentic AI system for supplier management, dynamic pricing, and customer experience optimization — inspired by Wayfair's operational challenges.**
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-projects.benjaminblack.consulting-blue)](https://projects.benjaminblack.consulting)
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-black)](https://github.com/YOUR_USERNAME/suppliersync)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black)](https://github.com/blackbenjamin/suppliersync)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-> **Note**: Replace `YOUR_USERNAME` in the GitHub badge above with your actual GitHub username.
 
 ## 🎯 Product Vision
 
