@@ -277,7 +277,7 @@ async def rag_status(request: Request):
     """Check RAG vectorstore status."""
     if not RAG_AVAILABLE:
         return JSONResponse({
-            "status": "not_ready",
+            "status": "not_available",
             "has_docs_directory": False,
             "has_vectorstore": False,
             "docs_path": os.getenv("RAG_DOCS_PATH", "data/docs"),

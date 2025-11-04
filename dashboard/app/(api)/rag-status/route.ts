@@ -20,6 +20,19 @@ export async function GET() {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[RAG Status] API error: ${response.status} - ${errorText}`);
+      // Return "not_available" status for 503 errors (RAG not available)
+      if (response.status === 503) {
+        return NextResponse.json({
+          status: "not_available",
+          has_docs_directory: false,
+          has_vectorstore: false,
+          docs_path: "",
+          persist_path: "",
+          document_count: 0,
+          file_count: 0,
+          message: "RAG dependencies not installed"
+        });
+      }
       // Return error response instead of throwing
       return NextResponse.json(
         { 
