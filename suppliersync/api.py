@@ -13,8 +13,15 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
 from agents.orchestrator import Orchestrator
-from core.rag import build_vectorstore
 from core.security import validate_path
+
+# RAG is optional - only import if available
+try:
+    from core.rag import build_vectorstore
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
+    logger.warning("RAG dependencies not installed. RAG endpoints will be disabled.")
 
 # Configure structured logging
 logging.basicConfig(
@@ -157,6 +164,8 @@ async def rebuild_rag(request: Request):
     
     Security: Validates paths and rate-limited to prevent abuse.
     """
+    if not RAG_AVAILABLE:
+        raise HTTPException(status_code=503, detail="RAG functionality not available. Install langchain, chromadb, and sentence-transformers to enable.")
     logger.info("RAG rebuild requested")
     try:
         # Validate and sanitize paths
@@ -223,6 +232,17 @@ async def rebuild_rag(request: Request):
 @limiter.limit("30/minute")  # Rate limit: 30 requests per minute
 async def rag_status(request: Request):
     """Check RAG vectorstore status."""
+    if not RAG_AVAILABLE:
+        return JSONResponse({
+            "status": "not_ready",
+            "has_docs_directory": False,
+            "has_vectorstore": False,
+            "docs_path": os.getenv("RAG_DOCS_PATH", "data/docs"),
+            "persist_path": os.getenv("RAG_PERSIST_PATH", ".chroma"),
+            "document_count": 0,
+            "file_count": 0,
+            "message": "RAG dependencies not installed"
+        })
     try:
         persist_path = os.getenv("RAG_PERSIST_PATH", ".chroma")
         docs_path = os.getenv("RAG_DOCS_PATH", "data/docs")
