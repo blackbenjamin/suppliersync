@@ -11,6 +11,46 @@ import { MetricsView } from "@/components/MetricsView";
 import { RAGStatus } from "@/components/RAGStatus";
 import { formatEasternTime } from "@/lib/dateUtils";
 
+// RAG section component that only renders if RAG is available
+function RAGSection() {
+  const [ragAvailable, setRagAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkRAG = async () => {
+      try {
+        const res = await fetch("/rag-status", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          // Only show section if RAG is not "not_available"
+          setRagAvailable(data.status !== "not_available");
+        } else {
+          setRagAvailable(false);
+        }
+      } catch {
+        setRagAvailable(false);
+      }
+    };
+    checkRAG();
+  }, []);
+
+  // Don't render until we know RAG status
+  if (ragAvailable === null) {
+    return null;
+  }
+
+  // Hide section if RAG is not available
+  if (!ragAvailable) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold">RAG Status</h2>
+      <RAGStatus />
+    </section>
+  );
+}
+
 export default function Page() {
   const [catalog, setCatalog] = useState<any[]>([]);
   const [priceEvents, setPriceEvents] = useState<any[]>([]);
@@ -69,10 +109,8 @@ export default function Page() {
           <MetricsView />
         </section>
 
-        <section className="space-y-2">
-          <h2 className="text-lg font-semibold">RAG Status</h2>
-          <RAGStatus />
-        </section>
+        {/* Only show RAG section if RAG is available */}
+        <RAGSection />
 
         <section className="space-y-2">
           <h2 className="text-lg font-semibold">Catalog</h2>
