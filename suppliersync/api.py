@@ -75,6 +75,12 @@ allowed_origins = os.getenv(
     "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001"
 ).split(",")
 
+# Add Vercel domain if provided
+vercel_domain = os.getenv("VERCEL_DOMAIN", "")
+if vercel_domain:
+    allowed_origins.append(f"https://{vercel_domain}")
+    allowed_origins.append(f"https://www.{vercel_domain}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
