@@ -1,71 +1,122 @@
 #!/bin/bash
-# Quick script to set up GitHub repository for SupplierSync
+# Script to set up git and push to existing GitHub repository
 
 set -e
 
-echo "🚀 Setting up GitHub repository for SupplierSync"
+echo "🚀 Setting up SupplierSync for GitHub"
 echo ""
 
 # Check if gh CLI is installed
 if ! command -v gh &> /dev/null; then
-    echo "❌ GitHub CLI not found. Installing..."
-    echo "   Install with: brew install gh"
-    echo "   Or create repository manually at: https://github.com/new"
+    echo "⚠️  GitHub CLI not found. Continuing with manual setup..."
+    USE_GH=false
+else
+    USE_GH=true
+fi
+
+# Get repository URL
+read -p "Enter your GitHub repository URL (e.g., https://github.com/username/suppliersync): " REPO_URL
+
+if [ -z "$REPO_URL" ]; then
+    echo "❌ Repository URL is required"
     exit 1
 fi
+
+# Extract username and repo name from URL
+if [[ $REPO_URL =~ github.com/([^/]+)/([^/]+) ]]; then
+    GITHUB_USER="${BASH_REMATCH[1]}"
+    REPO_NAME="${BASH_REMATCH[2]}"
+    REPO_NAME="${REPO_NAME%.git}"  # Remove .git if present
+else
+    echo "❌ Invalid GitHub URL format"
+    exit 1
+fi
+
+echo ""
+echo "📦 Repository: $GITHUB_USER/$REPO_NAME"
+echo ""
 
 # Check if already in a git repo
 if [ ! -d ".git" ]; then
     echo "📦 Initializing git repository..."
     git init
-    git add .
-    git commit -m "Initial commit: Multi-Agent AI Orchestrator with security, testing, and documentation"
-fi
-
-# Get repository name
-read -p "Enter GitHub repository name (default: suppliersync): " REPO_NAME
-REPO_NAME=${REPO_NAME:-suppliersync}
-
-# Get description
-read -p "Enter repository description (default: Multi-Agent AI Orchestrator for E-Commerce): " REPO_DESC
-REPO_DESC=${REPO_DESC:-"Multi-Agent AI Orchestrator for E-Commerce"}
-
-# Ask if public
-read -p "Make repository public? (y/n, default: y): " IS_PUBLIC
-IS_PUBLIC=${IS_PUBLIC:-y}
-
-if [ "$IS_PUBLIC" = "y" ] || [ "$IS_PUBLIC" = "Y" ]; then
-    VISIBILITY="--public"
+    git branch -M main
 else
-    VISIBILITY="--private"
+    echo "✅ Git repository already initialized"
 fi
 
-echo ""
-echo "📤 Creating GitHub repository..."
-echo "   Name: $REPO_NAME"
-echo "   Description: $REPO_DESC"
-echo "   Visibility: $VISIBILITY"
-echo ""
-
-# Check if already has remote
+# Check current remote
 if git remote | grep -q "^origin$"; then
-    echo "⚠️  Remote 'origin' already exists. Skipping remote setup."
-    echo "   To update: git remote set-url origin https://github.com/$(gh api user --jq .login)/$REPO_NAME.git"
+    CURRENT_REMOTE=$(git remote get-url origin)
+    echo "⚠️  Remote 'origin' already exists: $CURRENT_REMOTE"
+    read -p "Update remote URL? (y/n): " UPDATE_REMOTE
+    if [ "$UPDATE_REMOTE" = "y" ] || [ "$UPDATE_REMOTE" = "Y" ]; then
+        git remote set-url origin "$REPO_URL"
+        echo "✅ Updated remote URL"
+    else
+        echo "ℹ️  Keeping existing remote"
+    fi
 else
-    # Create repository
-    gh repo create "$REPO_NAME" $VISIBILITY --description "$REPO_DESC" --source=. --remote=origin --push
-    
-    echo ""
-    echo "✅ Repository created successfully!"
-    echo ""
-    echo "🔗 Repository URL: https://github.com/$(gh api user --jq .login)/$REPO_NAME"
-    echo ""
-    echo "📝 Next steps:"
-    echo "   1. Update README.md with your GitHub username"
-    echo "   2. Deploy to Vercel: https://vercel.com/new"
-    echo "   3. Deploy API to Railway: https://railway.app"
-    echo "   4. Configure Cloudflare DNS"
-    echo ""
-    echo "   See QUICK_START.md for detailed instructions"
+    echo "🔗 Adding remote repository..."
+    git remote add origin "$REPO_URL"
+    echo "✅ Remote added"
 fi
 
+# Check if there are uncommitted changes
+if [ -n "$(git status --porcelain)" ]; then
+    echo ""
+    echo "📝 Staging and committing changes..."
+    git add .
+    
+    # Check if this is the first commit
+    if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+        COMMIT_MSG="Initial commit: Multi-Agent AI Orchestrator with security, testing, and documentation"
+    else
+        read -p "Enter commit message (or press Enter for default): " COMMIT_MSG
+        COMMIT_MSG=${COMMIT_MSG:-"Update: Multi-Agent AI Orchestrator"}
+    fi
+    
+    git commit -m "$COMMIT_MSG"
+    echo "✅ Changes committed"
+else
+    echo "✅ No uncommitted changes"
+fi
+
+# Push to GitHub
+echo ""
+echo "📤 Pushing to GitHub..."
+read -p "Push to GitHub now? (y/n, default: y): " PUSH_NOW
+PUSH_NOW=${PUSH_NOW:-y}
+
+if [ "$PUSH_NOW" = "y" ] || [ "$PUSH_NOW" = "Y" ]; then
+    # Check if main branch exists on remote
+    if git ls-remote --heads origin main >/dev/null 2>&1; then
+        echo "⚠️  Remote 'main' branch already exists"
+        read -p "Pull and merge first? (y/n): " PULL_FIRST
+        if [ "$PULL_FIRST" = "y" ] || [ "$PULL_FIRST" = "Y" ]; then
+            git pull origin main --allow-unrelated-histories || true
+        fi
+        echo "📤 Pushing to main..."
+        git push -u origin main
+    else
+        echo "📤 Pushing to main (first push)..."
+        git push -u origin main
+    fi
+    echo ""
+    echo "✅ Successfully pushed to GitHub!"
+else
+    echo "ℹ️  Skipping push. Run 'git push -u origin main' when ready."
+fi
+
+echo ""
+echo "🎉 Setup complete!"
+echo ""
+echo "🔗 Repository URL: https://github.com/$GITHUB_USER/$REPO_NAME"
+echo ""
+echo "📝 Next steps:"
+echo "   1. Update README.md with your GitHub username (replace YOUR_USERNAME)"
+echo "   2. Deploy dashboard to Vercel: https://vercel.com/new"
+echo "   3. Deploy API to Railway: https://railway.app"
+echo "   4. Configure Cloudflare DNS"
+echo ""
+echo "   See QUICK_START.md for detailed deployment instructions"

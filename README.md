@@ -6,6 +6,8 @@
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-black)](https://github.com/YOUR_USERNAME/suppliersync)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+> **Note**: Replace `YOUR_USERNAME` in the GitHub badge above with your actual GitHub username.
+
 ## 🎯 Product Vision
 
 SupplierSync addresses the core challenge in modern e-commerce: **managing complex supplier relationships, optimizing pricing in real-time, and delivering exceptional customer experiences** — all while maintaining profitability and compliance.
