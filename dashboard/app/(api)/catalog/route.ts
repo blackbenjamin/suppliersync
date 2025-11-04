@@ -1,9 +1,26 @@
-
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const API_URL = process.env.ORCHESTRATOR_API_URL || "http://localhost:8000";
 
 export async function GET() {
-  const rows = query("SELECT * FROM products WHERE is_active=1 ORDER BY sku");
-  return NextResponse.json(rows);
+  try {
+    const response = await fetch(`${API_URL}/api/catalog`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(5000),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data.products || []);
+  } catch (error: any) {
+    console.error("Catalog fetch error:", error);
+    return NextResponse.json([], { status: 200 }); // Return empty array on error
+  }
 }

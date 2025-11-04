@@ -1,9 +1,29 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const rows = query("SELECT * FROM rejected_prices ORDER BY id DESC LIMIT 50");
-  return NextResponse.json(rows);
+const API_URL = process.env.ORCHESTRATOR_API_URL || "http://localhost:8000";
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const limit = searchParams.get("limit") || "20";
+    
+    const response = await fetch(`${API_URL}/api/rejected-prices?limit=${limit}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(5000),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data.prices || []);
+  } catch (error: any) {
+    console.error("Rejected prices fetch error:", error);
+    return NextResponse.json([], { status: 200 }); // Return empty array on error
+  }
 }
-

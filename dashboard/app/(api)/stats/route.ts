@@ -4,12 +4,9 @@ export const dynamic = "force-dynamic";
 
 const API_URL = process.env.ORCHESTRATOR_API_URL || "http://localhost:8000";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const limit = searchParams.get("limit") || "20";
-    
-    const response = await fetch(`${API_URL}/api/price-events?limit=${limit}`, {
+    const response = await fetch(`${API_URL}/api/stats`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(5000),
@@ -21,9 +18,15 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data.events || []);
+    return NextResponse.json(data);
   } catch (error: any) {
-    console.error("Price events fetch error:", error);
-    return NextResponse.json([], { status: 200 }); // Return empty array on error
+    console.error("Stats fetch error:", error);
+    return NextResponse.json({
+      active_skus: 0,
+      approved_price_events: 0,
+      rejected_prices: 0,
+      cx_events: 0,
+    });
   }
 }
+

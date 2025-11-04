@@ -5,13 +5,14 @@ Run with: uvicorn api:app --reload --port 8000
 
 import os
 import logging
+import sqlite3
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from agents.orchestrator import Orchestrator
 from core.security import validate_path
 
@@ -128,6 +129,42 @@ class OrchestrateResponse(BaseModel):
     approved_prices: list = Field(default_factory=list, description="Price changes that passed governance")
     rejected_prices: list = Field(default_factory=list, description="Price changes that failed governance")
     cx_actions: list = Field(default_factory=list, description="Customer experience actions proposed")
+
+
+class StatsResponse(BaseModel):
+    """Dashboard stats response model."""
+    active_skus: int = Field(ge=0, description="Number of active products")
+    approved_price_events: int = Field(ge=0, description="Number of approved price events")
+    rejected_prices: int = Field(ge=0, description="Number of rejected prices")
+    cx_events: int = Field(ge=0, description="Number of CX events")
+
+
+class CatalogResponse(BaseModel):
+    """Catalog response model."""
+    products: List[Dict[str, Any]] = Field(description="List of active products")
+
+
+class PriceEventsResponse(BaseModel):
+    """Price events response model."""
+    events: List[Dict[str, Any]] = Field(description="List of price events")
+
+
+class RejectedPricesResponse(BaseModel):
+    """Rejected prices response model."""
+    prices: List[Dict[str, Any]] = Field(description="List of rejected prices")
+
+
+class CXEventsResponse(BaseModel):
+    """CX events response model."""
+    events: List[Dict[str, Any]] = Field(description="List of CX events")
+
+
+class MetricsResponse(BaseModel):
+    """Metrics response model."""
+    total_cost: float = Field(ge=0, description="Total API cost")
+    total_tokens: int = Field(ge=0, description="Total tokens used")
+    avg_latency: float = Field(ge=0, description="Average latency in seconds")
+    runs: List[Dict[str, Any]] = Field(description="Recent orchestration runs")
 
 
 # Request size limit middleware
@@ -352,6 +389,185 @@ async def orchestrate(request: Request):
         logger.error(f"Orchestration error: {e}", exc_info=True)
         # Return generic error message to client (no information leakage)
         raise HTTPException(status_code=500, detail="Orchestration failed. Check server logs for details.")
+
+
+def get_db_connection():
+    """Get database connection for dashboard endpoints."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+@app.get("/api/stats", response_model=StatsResponse)
+@limiter.limit("60/minute")  # Rate limit: 60 requests per minute
+async def get_stats(request: Request):
+    """Get dashboard statistics."""
+    logger.info("Dashboard stats requested")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get counts
+        active_skus = cursor.execute("SELECT COUNT(*) FROM products WHERE is_active=1").fetchone()[0]
+        approved_price_events = cursor.execute("SELECT COUNT(*) FROM price_events").fetchone()[0]
+        rejected_prices = cursor.execute("SELECT COUNT(*) FROM rejected_prices").fetchone()[0]
+        cx_events = cursor.execute("SELECT COUNT(*) FROM cx_events").fetchone()[0]
+        
+        conn.close()
+        
+        return StatsResponse(
+            active_skus=active_skus,
+            approved_price_events=approved_price_events,
+            rejected_prices=rejected_prices,
+            cx_events=cx_events,
+        )
+    except Exception as e:
+        logger.error(f"Stats error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch stats. Check server logs for details.")
+
+
+@app.get("/api/catalog", response_model=CatalogResponse)
+@limiter.limit("60/minute")  # Rate limit: 60 requests per minute
+async def get_catalog(request: Request):
+    """Get product catalog."""
+    logger.info("Catalog requested")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        rows = cursor.execute(
+            "SELECT sku, name, category, wholesale_price, retail_price FROM products WHERE is_active=1 ORDER BY sku"
+        ).fetchall()
+        
+        products = [dict(row) for row in rows]
+        conn.close()
+        
+        return CatalogResponse(products=products)
+    except Exception as e:
+        logger.error(f"Catalog error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch catalog. Check server logs for details.")
+
+
+@app.get("/api/price-events", response_model=PriceEventsResponse)
+@limiter.limit("60/minute")  # Rate limit: 60 requests per minute
+async def get_price_events(request: Request, limit: int = 20):
+    """Get recent price events."""
+    logger.info(f"Price events requested (limit={limit})")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        rows = cursor.execute(
+            "SELECT * FROM price_events ORDER BY id DESC LIMIT ?",
+            (limit,)
+        ).fetchall()
+        
+        events = [dict(row) for row in rows]
+        conn.close()
+        
+        return PriceEventsResponse(events=events)
+    except Exception as e:
+        logger.error(f"Price events error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch price events. Check server logs for details.")
+
+
+@app.get("/api/rejected-prices", response_model=RejectedPricesResponse)
+@limiter.limit("60/minute")  # Rate limit: 60 requests per minute
+async def get_rejected_prices(request: Request, limit: int = 20):
+    """Get recent rejected prices."""
+    logger.info(f"Rejected prices requested (limit={limit})")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        rows = cursor.execute(
+            "SELECT * FROM rejected_prices ORDER BY id DESC LIMIT ?",
+            (limit,)
+        ).fetchall()
+        
+        prices = [dict(row) for row in rows]
+        conn.close()
+        
+        return RejectedPricesResponse(prices=prices)
+    except Exception as e:
+        logger.error(f"Rejected prices error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch rejected prices. Check server logs for details.")
+
+
+@app.get("/api/cx-events", response_model=CXEventsResponse)
+@limiter.limit("60/minute")  # Rate limit: 60 requests per minute
+async def get_cx_events(request: Request, limit: int = 20):
+    """Get recent CX events."""
+    logger.info(f"CX events requested (limit={limit})")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        rows = cursor.execute(
+            "SELECT * FROM cx_events ORDER BY id DESC LIMIT ?",
+            (limit,)
+        ).fetchall()
+        
+        events = [dict(row) for row in rows]
+        conn.close()
+        
+        return CXEventsResponse(events=events)
+    except Exception as e:
+        logger.error(f"CX events error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch CX events. Check server logs for details.")
+
+
+@app.get("/api/metrics", response_model=MetricsResponse)
+@limiter.limit("60/minute")  # Rate limit: 60 requests per minute
+async def get_metrics(request: Request, limit: int = 10):
+    """Get metrics and observability data."""
+    logger.info(f"Metrics requested (limit={limit})")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get all agent logs grouped by run_id
+        rows = cursor.execute(
+            """SELECT run_id, 
+                      MIN(created_at) as created_at,
+                      SUM(tokens_in + COALESCE(tokens_out, 0)) as total_tokens,
+                      SUM(COALESCE(cost_usd, 0)) as total_cost,
+                      AVG(latency_ms) as avg_latency_ms,
+                      COUNT(*) as agent_count
+               FROM agent_logs 
+               WHERE run_id IS NOT NULL
+               GROUP BY run_id 
+               ORDER BY MAX(created_at) DESC 
+               LIMIT ?""",
+            (limit,)
+        ).fetchall()
+        
+        runs = []
+        total_cost = 0.0
+        total_tokens = 0
+        latencies = []
+        
+        for row in rows:
+            run_data = dict(row)
+            runs.append(run_data)
+            total_cost += run_data.get("total_cost", 0) or 0
+            total_tokens += run_data.get("total_tokens", 0) or 0
+            if run_data.get("avg_latency_ms"):
+                latencies.append(run_data["avg_latency_ms"] / 1000.0)  # Convert to seconds
+        
+        avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
+        
+        conn.close()
+        
+        return MetricsResponse(
+            total_cost=total_cost,
+            total_tokens=total_tokens,
+            avg_latency=avg_latency,
+            runs=runs,
+        )
+    except Exception as e:
+        logger.error(f"Metrics error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch metrics. Check server logs for details.")
 
 
 if __name__ == "__main__":
