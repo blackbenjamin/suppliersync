@@ -3,28 +3,6 @@
 import { useEffect, useState } from "react";
 import { formatEasternTime } from "@/lib/dateUtils";
 
-interface AgentLog {
-  id: number;
-  agent: string;
-  step: string;
-  tokens_in: number;
-  tokens_out: number;
-  latency_ms: number;
-  cost_usd: number;
-  run_id: string;
-  created_at: string;
-}
-
-interface RunSummary {
-  run_id: string;
-  total_cost: number;
-  total_tokens_in: number;
-  total_tokens_out: number;
-  total_latency_ms: number;
-  agent_count: number;
-  created_at: string;
-}
-
 export function MetricsView() {
   const [metrics, setMetrics] = useState({
     total_cost: 0,
@@ -32,30 +10,28 @@ export function MetricsView() {
     avg_latency: 0,
     runs: [] as any[],
   });
-  const [agentPerformance, setAgentPerformance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_ORCHESTRATOR_API_URL || process.env.ORCHESTRATOR_API_URL || "http://localhost:8000";
-        const response = await fetch(`${API_URL}/api/metrics`, {
+        // Fetch from Next.js API route (not directly from Railway)
+        const response = await fetch("/metrics", {
           cache: "no-store",
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setMetrics(data);
-          
-          // Calculate agent performance from runs
-          // This is a simplified version - in production you'd want a dedicated endpoint
-          const agentStats = new Map<string, { count: number; totalLatency: number; totalCost: number; totalTokens: number }>();
-          
-          // Note: We'd need agent-level data, but for now we'll show run-level data
-          setAgentPerformance([]);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
         }
-      } catch (error) {
-        console.error("Failed to fetch metrics:", error);
+
+        const data = await response.json();
+        setMetrics(data);
+        setError(null);
+      } catch (err: any) {
+        console.error("Failed to fetch metrics:", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -68,6 +44,13 @@ export function MetricsView() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="card p-4 bg-red-50 border border-red-200">
+          <div className="text-sm text-red-600 font-medium">Error loading metrics</div>
+          <div className="text-xs text-red-500 mt-1">{error}</div>
+        </div>
+      )}
+      
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card p-4">
