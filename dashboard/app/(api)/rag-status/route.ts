@@ -7,17 +7,20 @@ const API_URL = process.env.ORCHESTRATOR_API_URL || "http://localhost:8000";
 
 export async function GET() {
   try {
+    console.log(`[RAG Status] Fetching from: ${API_URL}/rag/status`);
+    
     const response = await fetch(`${API_URL}/rag/status`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       // Add timeout to prevent hanging
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(10000), // Increased timeout
       cache: "no-store", // Disable fetch caching
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`RAG status API error: ${response.status} ${errorText}`);
+      console.error(`[RAG Status] API error: ${response.status} - ${errorText}`);
+      // Return error response instead of throwing
       return NextResponse.json(
         { 
           status: "error", 
@@ -26,13 +29,15 @@ export async function GET() {
           has_vectorstore: false,
           docs_path: "",
           persist_path: "",
-          document_count: 0
+          document_count: 0,
+          file_count: 0
         },
-        { status: 500 }
+        { status: response.status }
       );
     }
 
     const data = await response.json();
+    console.log(`[RAG Status] Success: ${JSON.stringify(data)}`);
     // Return with no-cache headers to prevent client-side caching
     return NextResponse.json(data, {
       headers: {
@@ -42,7 +47,8 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    console.error("RAG status fetch error:", error);
+    console.error("[RAG Status] Fetch error:", error.message);
+    // Return error response instead of throwing
     return NextResponse.json(
       { 
         status: "error", 
@@ -51,9 +57,10 @@ export async function GET() {
         has_vectorstore: false,
         docs_path: "",
         persist_path: "",
-        document_count: 0
+        document_count: 0,
+        file_count: 0
       },
-      { status: 500 }
+      { status: 200 } // Return 200 with error status in body
     );
   }
 }
