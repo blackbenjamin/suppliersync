@@ -447,6 +447,33 @@ async def populate_database(request: Request):
         raise HTTPException(status_code=500, detail="Failed to populate database. Check server logs for details.")
 
 
+@app.post("/api/generate-price-events")
+@limiter.limit("10/minute")  # Rate limit: 10 requests per minute
+async def generate_price_events_endpoint(request: Request, count: int = 10):
+    """
+    Generate realistic price_events test data.
+    
+    Query params:
+        count: Number of price events to generate (default: 10, max: 50)
+    """
+    logger.info(f"Generate price events requested (count={count})")
+    try:
+        # Limit count to prevent abuse
+        count = min(max(1, count), 50)
+        
+        from generate_price_events import generate_price_events
+        events_created = generate_price_events(count)
+        logger.info(f"Generated {events_created} price events")
+        return {
+            "status": "success",
+            "message": f"Generated {events_created} price events",
+            "count": events_created
+        }
+    except Exception as e:
+        logger.error(f"Generate price events error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to generate price events. Check server logs for details.")
+
+
 @app.get("/api/catalog", response_model=CatalogResponse)
 @limiter.limit("60/minute")  # Rate limit: 60 requests per minute
 async def get_catalog(request: Request):
