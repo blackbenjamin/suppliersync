@@ -1,0 +1,3 @@
+# Python runtime version for Railway/Nixpacks
+python-3.11
+

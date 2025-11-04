@@ -431,6 +431,7 @@ This project is deployed on:
 
 **Quick Start**: See [QUICK_START.md](QUICK_START.md) for deployment instructions.
 **Full Guide**: See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment documentation.
+**Next Steps**: See [NEXT_STEPS.md](NEXT_STEPS.md) for immediate action items after pushing to GitHub.
 
 ## 🔮 Future Enhancements
 
