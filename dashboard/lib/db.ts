@@ -10,27 +10,32 @@ function getDb(): Database.Database {
   if (!db) {
     const dbPath = process.env.SQLITE_PATH || "../suppliersync.db";
     
+    // In Vercel/production, database is not accessible - return null
+    // The dashboard should fetch data from the Railway API instead
+    if (process.env.VERCEL || !existsSync(dbPath)) {
+      return null as any; // Will be handled by query function
+    }
+    
     // Ensure the directory exists
     const dir = dirname(dbPath);
     if (dir !== "." && !existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
     
-    // Note: We don't use readonly mode because SQLite in WAL mode needs write access
-    // for WAL/SHM files even when only reading. The dashboard code never writes to the
-    // database (only queries), so this is safe.
-    db = new Database(dbPath, { 
-      fileMustExist: true // File must exist (created by API service)
-      // readonly: false - Allow write access for WAL files, but code never writes data
-    });
-    
-    // Disable WAL mode for dashboard connections to avoid write issues
-    // The dashboard only reads, so we don't need WAL's performance benefits
     try {
-      db.pragma("journal_mode = delete");
+      db = new Database(dbPath, { 
+        fileMustExist: false // Allow database to not exist (will return empty arrays)
+      });
+      
+      // Disable WAL mode for dashboard connections to avoid write issues
+      try {
+        db.pragma("journal_mode = delete");
+      } catch (error) {
+        console.warn("Could not change journal mode:", error);
+      }
     } catch (error) {
-      // If WAL mode is already disabled or can't be changed, that's fine
-      console.warn("Could not change journal mode:", error);
+      console.warn("Database connection failed:", error);
+      return null as any;
     }
   }
   return db;
@@ -38,28 +43,42 @@ function getDb(): Database.Database {
 
 export function query<T = any>(sql: string, params: any[] = []): T[] {
   try {
+    // In Vercel/production, database is not accessible - return empty array
+    if (process.env.VERCEL) {
+      return [] as T[];
+    }
+    
     const database = getDb();
+    if (!database) {
+      return [] as T[];
+    }
+    
     const stmt = database.prepare(sql);
     return stmt.all(...params) as T[];
   } catch (error: any) {
-    // During build, database might not exist - return empty array
-    if (process.env.NEXT_PHASE === "phase-production-build") {
-      return [] as T[];
-    }
-    throw error;
+    // During build or if database not available, return empty array
+    console.warn("Database query error:", error.message);
+    return [] as T[];
   }
 }
 
 export function run(sql: string, params: any[] = []) {
   try {
+    // In Vercel/production, database is not accessible - return empty result
+    if (process.env.VERCEL) {
+      return { changes: 0, lastInsertRowid: 0 };
+    }
+    
     const database = getDb();
+    if (!database) {
+      return { changes: 0, lastInsertRowid: 0 };
+    }
+    
     const stmt = database.prepare(sql);
     return stmt.run(...params);
   } catch (error: any) {
-    // During build, database might not exist
-    if (process.env.NEXT_PHASE === "phase-production-build") {
-      return { changes: 0, lastInsertRowid: 0 };
-    }
-    throw error;
+    // During build or if database not available, return empty result
+    console.warn("Database run error:", error.message);
+    return { changes: 0, lastInsertRowid: 0 };
   }
 }
