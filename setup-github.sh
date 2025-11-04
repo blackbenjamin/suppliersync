@@ -22,13 +22,17 @@ if [ -z "$REPO_URL" ]; then
     exit 1
 fi
 
+# Clean up URL - remove trailing .git, whitespace, and fix common typos
+REPO_URL=$(echo "$REPO_URL" | sed 's/\.git$//' | sed 's/^h*https/http/' | sed 's/^h*http/https/' | xargs)
+
 # Extract username and repo name from URL
-if [[ $REPO_URL =~ github.com/([^/]+)/([^/]+) ]]; then
+if [[ $REPO_URL =~ github\.com/([^/]+)/([^/]+) ]]; then
     GITHUB_USER="${BASH_REMATCH[1]}"
     REPO_NAME="${BASH_REMATCH[2]}"
     REPO_NAME="${REPO_NAME%.git}"  # Remove .git if present
 else
-    echo "❌ Invalid GitHub URL format"
+    echo "❌ Invalid GitHub URL format. Expected: https://github.com/username/repo"
+    echo "   You entered: $REPO_URL"
     exit 1
 fi
 
@@ -47,20 +51,34 @@ fi
 
 # Check current remote
 if git remote | grep -q "^origin$"; then
-    CURRENT_REMOTE=$(git remote get-url origin)
+    CURRENT_REMOTE=$(git remote get-url origin 2>/dev/null || echo "none")
     echo "⚠️  Remote 'origin' already exists: $CURRENT_REMOTE"
-    read -p "Update remote URL? (y/n): " UPDATE_REMOTE
-    if [ "$UPDATE_REMOTE" = "y" ] || [ "$UPDATE_REMOTE" = "Y" ]; then
+    
+    # Check if URL is malformed (has hhttps or similar)
+    if echo "$CURRENT_REMOTE" | grep -q "^h"; then
+        echo "🔧 Detected malformed URL (starts with 'h'). Fixing automatically..."
         git remote set-url origin "$REPO_URL"
-        echo "✅ Updated remote URL"
+        echo "✅ Fixed and updated remote URL"
     else
-        echo "ℹ️  Keeping existing remote"
+        read -p "Update remote URL? (y/n): " UPDATE_REMOTE
+        if [ "$UPDATE_REMOTE" = "y" ] || [ "$UPDATE_REMOTE" = "Y" ]; then
+            git remote set-url origin "$REPO_URL"
+            echo "✅ Updated remote URL"
+        else
+            echo "ℹ️  Keeping existing remote"
+        fi
     fi
 else
     echo "🔗 Adding remote repository..."
     git remote add origin "$REPO_URL"
     echo "✅ Remote added"
 fi
+
+# Verify remote was set correctly
+echo ""
+echo "🔍 Verifying remote configuration..."
+git remote -v
+echo ""
 
 # Check if there are uncommitted changes
 if [ -n "$(git status --porcelain)" ]; then
