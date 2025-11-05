@@ -73,3 +73,17 @@ temp/
 *.cert
 secrets/
 
+# Internal/troubleshooting documentation (not for public repo)
+*_FIX.md
+*_SETUP.md
+*TROUBLESHOOTING.md
+QUICK_DIAGNOSTIC.md
+QUICK_START.md
+NEXT_STEPS.md
+setup-github.sh
+railway.json
+.railwayignore
+
+# Backup Dockerfiles
+Dockerfile.backup
+*.backup
